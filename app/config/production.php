@@ -1,7 +1,7 @@
 <?php 
 return [
   'app' => [
-    'url' => 'https://belkhirsaber.epizy.com',
+    'url' => 'http://phpstack-997644-3510410.cloudwaysapps.com/',
     'hash' => [
       'algo' => PASSWORD_BCRYPT,
       'cost' => 10
@@ -10,10 +10,10 @@ return [
 
   'db' => [
     'driver' => 'mysql',
-    'host' => 'sql209.epizy.com',
-    'name' => 'epiz_24996845_authentication',
-    'username' => 'epiz_24996845',
-    'password' => 'q5W6l1Pgmp4',
+    'host' => 'phpstack-997644-3510410.cloudwaysapps.com:8082',
+    'name' => 'wscjkbrxtp',
+    'username' => 'wscjkbrxtp',
+    'password' => 'zjxUU5vwX8',
     'charset' => 'utf8mb4',
     'collation' => 'utf8mb4_general_ci',
     'prefix' => '',
