@@ -1,0 +1,27 @@
+{
+    "autoload": {
+        "psr-4": {
+            "Kernel\\": "app/Kernel"
+        }
+    },
+
+    "require": {
+        "slim/slim": "^4.11",
+        "slim/twig-view": "^3.3",
+        "phpmailer/phpmailer": "^6.8",
+        "hassankhan/config": "^3.1",
+        "illuminate/database": "10.5.*",
+        "ircmaxell/random-lib": "^1.2",
+        "egulias/email-validator": "^4.0",
+        "slim/psr7": "^1.6.1",
+        "php-di/php-di": "^7.0",
+        "slim/flash": "^0.4.0"
+    },
+
+    "config":{
+        "process-timeout": 0
+    },
+    "scripts":{
+        "start": "php -S localhost:8000 -t public/"
+    }
+}
