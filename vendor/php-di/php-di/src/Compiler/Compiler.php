@@ -34,16 +34,24 @@ use function unlink;
  */
 class Compiler
 {
-    private string $containerClass;
+    /**
+     * @var string
+     */
+    private $containerClass;
 
-    private string $containerParentClass;
+    /**
+     * @var string
+     */
+    private $containerParentClass;
 
     /**
      * Definitions indexed by the entry name. The value can be null if the definition needs to be fetched.
      *
      * Keys are strings, values are `Definition` objects or null.
+     *
+     * @var \ArrayIterator
      */
-    private \ArrayIterator $entriesToCompile;
+    private $entriesToCompile;
 
     /**
      * Progressive counter for definitions.
@@ -51,8 +59,10 @@ class Compiler
      * Each key in $entriesToCompile is defined as 'SubEntry' + counter
      * and each definition has always the same key in the CompiledContainer
      * if PHP-DI configuration does not change.
+     *
+     * @var int
      */
-    private int $subEntryCounter = 0;
+    private $subEntryCounter;
 
     /**
      * Progressive counter for CompiledContainer get methods.
@@ -60,26 +70,36 @@ class Compiler
      * Each CompiledContainer method name is defined as 'get' + counter
      * and remains the same after each recompilation
      * if PHP-DI configuration does not change.
+     *
+     * @var int
      */
-    private int $methodMappingCounter = 0;
+    private $methodMappingCounter;
 
     /**
      * Map of entry names to method names.
      *
      * @var string[]
      */
-    private array $entryToMethodMapping = [];
+    private $entryToMethodMapping = [];
 
     /**
      * @var string[]
      */
-    private array $methods = [];
+    private $methods = [];
 
-    private bool $autowiringEnabled;
+    /**
+     * @var bool
+     */
+    private $autowiringEnabled;
 
-    public function __construct(
-        private ProxyFactory $proxyFactory,
-    ) {
+    /**
+     * @var ProxyFactory
+     */
+    private $proxyFactory;
+
+    public function __construct(ProxyFactory $proxyFactory)
+    {
+        $this->proxyFactory = $proxyFactory;
     }
 
     public function getProxyFactory() : ProxyFactory
@@ -163,7 +183,7 @@ class Compiler
         return $fileName;
     }
 
-    private function writeFileAtomic(string $fileName, string $content) : void
+    private function writeFileAtomic(string $fileName, string $content) : int
     {
         $tmpFile = @tempnam(dirname($fileName), 'swap-compile');
         if ($tmpFile === false) {
@@ -186,12 +206,14 @@ class Compiler
             @unlink($tmpFile);
             throw new InvalidArgumentException(sprintf('Error while renaming %s to %s', $tmpFile, $fileName));
         }
+
+        return $written;
     }
 
     /**
-     * @return string The method name
      * @throws DependencyException
      * @throws InvalidDefinition
+     * @return string The method name
      */
     private function compileDefinition(string $entryName, Definition $definition) : string
     {
@@ -222,13 +244,13 @@ class Compiler
                 $isOptional = $this->compileValue($definition->isOptional());
                 $defaultValue = $this->compileValue($definition->getDefaultValue());
                 $code = <<<PHP
-                            \$value = \$_ENV[$variableName] ?? \$_SERVER[$variableName] ?? getenv($variableName);
-                            if (false !== \$value) return \$value;
-                            if (!$isOptional) {
-                                throw new \DI\Definition\Exception\InvalidDefinition("The environment variable '{$definition->getVariableName()}' has not been defined");
-                            }
-                            return $defaultValue;
-                    PHP;
+        \$value = \$_ENV[$variableName] ?? \$_SERVER[$variableName] ?? getenv($variableName);
+        if (false !== \$value) return \$value;
+        if (!$isOptional) {
+            throw new \DI\Definition\Exception\InvalidDefinition("The environment variable '{$definition->getVariableName()}' has not been defined");
+        }
+        return $defaultValue;
+PHP;
                 break;
             case $definition instanceof ArrayDefinition:
                 try {
@@ -298,7 +320,7 @@ class Compiler
         return $methodName;
     }
 
-    public function compileValue(mixed $value) : string
+    public function compileValue($value) : string
     {
         // Check that the value can be compiled
         $errorMessage = $this->isCompilable($value);
@@ -334,7 +356,7 @@ class Compiler
         return var_export($value, true);
     }
 
-    private function createCompilationDirectory(string $directory) : void
+    private function createCompilationDirectory(string $directory)
     {
         if (!is_dir($directory) && !@mkdir($directory, 0777, true) && !is_dir($directory)) {
             throw new InvalidArgumentException(sprintf('Compilation directory does not exist and cannot be created: %s.', $directory));
@@ -347,13 +369,15 @@ class Compiler
     /**
      * @return string|true If true is returned that means that the value is compilable.
      */
-    private function isCompilable($value) : string|bool
+    private function isCompilable($value)
     {
         if ($value instanceof ValueDefinition) {
             return $this->isCompilable($value->getValue());
         }
-        if (($value instanceof DecoratorDefinition) && empty($value->getName())) {
-            return 'Decorators cannot be nested in another definition';
+        if ($value instanceof DecoratorDefinition) {
+            if (empty($value->getName())) {
+                return 'Decorators cannot be nested in another definition';
+            }
         }
         // All other definitions are compilable
         if ($value instanceof Definition) {
@@ -373,7 +397,7 @@ class Compiler
     }
 
     /**
-     * @throws InvalidDefinition
+     * @throws \DI\Definition\Exception\InvalidDefinition
      */
     private function compileClosure(\Closure $closure) : string
     {
@@ -391,6 +415,8 @@ class Compiler
         // $this, which makes sense since their code is copied into another class.
         $code = ($reflector->isStatic() ? '' : 'static ') . $reflector->getCode();
 
-        return trim($code, "\t\n\r;");
+        $code = trim($code, "\t\n\r;");
+
+        return $code;
     }
 }

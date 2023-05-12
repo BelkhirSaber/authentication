@@ -7,7 +7,6 @@ header("Expires: 0");
 
 // use Psr\Http\Message\ResponseInterface as Response;
 // use Psr\Http\Message\ServerRequestInterface as Request;
-use Exception;
 use DI\Container;
 use Slim\Views\Twig;
 use Noodlehaus\Config;
@@ -37,17 +36,35 @@ require_once INC_ROUT . '/vendor/autoload.php';
 $config_file = INC_ROUT . '/app/config/'. file_get_contents(INC_ROUT . '/mode.php') . '.php';
 // $config = Config::load($config_file);
 $storage = [];
-$container =  new Container([
-  'config' => Config::load($config_file),
-  'user' => new User,
-  'flash' => new Messages($storage),
-  'validator' => new Validator,
-]);
+// $container =  new Container([
+//   'config' => Config::load($config_file),
+//   'user' => new User,
+//   'flash' => new Messages($storage),
+//   'validator' => new Validator,
+// ]);
+
+$container = new Container();
 
 
 AppFactory::setContainer($container);
 // Create instance from slim 
 $app = AppFactory::create();
+
+$container->set('config', function() use($config_file){
+  return Config::load($config_file);
+});
+
+$container->set('user', function() {
+  return new User;
+});
+
+$container->set('flash', function() use($storage){
+  return new Messages($storage);
+});
+
+$container->set('validator', function() use($config_file){
+  return new Validator;
+});
 
 $container->set('hash', function() use($app){
   return new Hash($app->getContainer()->get('config'));
