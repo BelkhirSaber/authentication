@@ -2,22 +2,25 @@
 
 namespace Kernel\Helpers;
 
-// use kernel\User\User;
+use kernel\User\User;
+use Slim\App;
 
 class Validator{
 
+  private $app;
   private $errors;
   private $rules_errors;
   private  $data;
   private $validation;
 
   // Construct
-  public function __construct(){
+  public function __construct(App $app){
     define('MAX_FLAG', 'max');
     define('MIN_FLAG', 'min');
     $this->errors = [];
     $this->rules_errors = [];
     $this->validation = false;
+    $this->app = $app;
   }
 
 
@@ -200,10 +203,12 @@ class Validator{
    * Check if field is unique
    */
   protected function unique($model, $field, $value){
-    $model = "kernel\Models\\" . ucfirst($model);
-    $instance = new $model();
-    $row = $instance->where($field, trim($value))->first();
-    return empty($row->$field) ? true : false;
+    // $model = "\kernel\Models\\" . ucfirst($model);
+    // $instance = new $model();
+    // $row = $instance->where($field, trim($value))->first();
+    $row = $this->app->getContainer()->get($model)->where($field, trim($value))->first();
+    return (bool)empty($row);
+    // return empty($row->$field) ? true : false;
   }
 
   /**

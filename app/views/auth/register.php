@@ -50,6 +50,7 @@
             </div>
 
             <input type="hidden" name="{{ csrf.key }}" value="{{ csrf.token }}">
+            <input type="hidden" name="recaptcha-response" id="recaptchaResponse">
 
             <div class="col-md-3 form-group mt-5">
               <input class="form-control btn btn-primary" type="submit" value="register" onclick="user_exists(event)"/>
@@ -95,20 +96,27 @@
 
     function user_exists(e){
       e.preventDefault();
-
       const form = document.forms.namedItem('register');
       const formData = new FormData(form);
       let jsonData = {};
 
       // Hide all errors message
       for(key of formData.keys()){
-        if(key === 'csrf_token') {
+        if(key === 'csrf_token' || key === 'recaptcha-response') {
           continue;
         }
         inputMessageHelp(key, true);
       }
       for(key of formData.keys()) jsonData[key] = formData.get(key);
       fieldExists(form, jsonData);
+
+      // generate new captcha
+      grecaptcha.enterprise.ready(function() {
+        grecaptcha.enterprise.execute('6LeC2-klAAAAAKva_bvQRn6ZI6LAUvLWOPwftkir', {action: 'submit'}).then(function(token) {
+          document.getElementById('recaptchaResponse').value = token;
+        });
+      });
+
     }// end user_exists
 
     // Check input validity

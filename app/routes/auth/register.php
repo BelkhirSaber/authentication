@@ -38,13 +38,14 @@ $app->post('/register', function(Request $request, Response $response){
 })->setName('register.post');
 
 $app->post('/check', function(Request $request, Response $response) {
+  // print_r($request->getParsedBody());
+  // die();
   // check if the fields are what are you waiting for
-  $fields = ['username', 'email', 'password', 'password_confirm', 'csrf_token']; $check = true;
+  $fields = ['username', 'email', 'password', 'password_confirm', 'csrf_token', 'recaptcha-response']; $check = true;
   if(count($fields) === count($request->getParsedBody())){
     foreach($fields as $field){
       if(!array_key_exists($field, $request->getParsedBody())){ $check = false; break; }
     }
-
     // Validate user input
     if($check){
       $json = [];
@@ -64,11 +65,11 @@ $app->post('/check', function(Request $request, Response $response) {
         'password_confirm.required' => 'password_confirm is required',
         'password_confirm.matches' => 'password_confirm is not match to password',];
       $data = array_reduce(array_keys($request->getParsedBody()), function($carry, $key) use($request){
-        if($key !== "csrf_token"){ $carry[$key] = $request->getParsedBody()[$key];}
+        if($key !== "csrf_token" && $key !== "recaptcha-response"){ $carry[$key] = $request->getParsedBody()[$key];}
         return $carry;
       });
       $validator = $this->get('validator');
-      $validator->make($data, $rules, $messages);
+      $validator->make($data, $rules, $messages);      
       $json = $validator->fails() ? $validator->errors() : '';
     }
   }else{

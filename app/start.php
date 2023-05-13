@@ -22,7 +22,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Kernel\Middleware\CsrfMiddleware;
 use Kernel\Middleware\AuthMiddleware;
 use Kernel\Middleware\RecaptchaMiddleware;
-use Kernel\Middleware\NotFoundMiddleware;
 
 
 
@@ -62,8 +61,8 @@ $container->set('flash', function() use($storage){
   return new Messages($storage);
 });
 
-$container->set('validator', function() use($config_file){
-  return new Validator;
+$container->set('validator', function() use($app){
+  return new Validator($app);
 });
 
 $container->set('hash', function() use($app){
